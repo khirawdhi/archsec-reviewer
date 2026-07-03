@@ -119,7 +119,7 @@ LICENSE
 
 ## Current Status
 
-🚧 **MVP (v0.1)**
+**MVP (v0.1)**
 
 Current capabilities:
 
