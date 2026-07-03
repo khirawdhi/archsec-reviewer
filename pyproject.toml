@@ -1,3 +1,4 @@
+```toml
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
@@ -5,12 +6,48 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "archsec-reviewer"
 version = "0.1.0"
-description = "AI-assisted security architecture review for cloud-native, AI, and distributed systems"
+description = "AI-assisted security architecture review for cloud-native, AI, and distributed systems."
 readme = "README.md"
 requires-python = ">=3.9"
-authors = [{ name = "Khirawdhi Ray" }]
 license = { text = "MIT" }
+
+authors = [
+    { name = "Khirawdhi Ray" }
+]
+
+keywords = [
+    "security",
+    "security-architecture",
+    "threat-modeling",
+    "product-security",
+    "application-security",
+    "ai-security",
+    "llm-security",
+    "cloud-security",
+    "devsecops",
+    "architecture-review"
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Topic :: Security",
+    "Topic :: Software Development",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/khirawdhi/archsec-reviewer"
+Repository = "https://github.com/khirawdhi/archsec-reviewer"
+Issues = "https://github.com/khirawdhi/archsec-reviewer/issues"
 
 [project.scripts]
 archsec-review = "archsec_reviewer.cli:main"
+```
