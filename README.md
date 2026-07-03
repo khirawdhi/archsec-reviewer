@@ -2,21 +2,40 @@
 
 AI-assisted security architecture review for cloud-native, AI, and distributed systems.
 
-`archsec-reviewer` reads an architecture description and generates a practical security review covering:
-
-- assets
-- trust boundaries
-- attack paths
-- STRIDE-style threats
-- recommended controls
-- validation checks
-- markdown threat model report
-
-> Security failures happen at trust boundaries, not components.
+> **Automate security architecture reviews by identifying trust boundaries, attack paths, STRIDE threats, and recommended security controls from system designs.**
 
 ---
 
-## Install
+## Why ArchSec Reviewer?
+
+Security architecture reviews are often manual, inconsistent, and time-consuming.
+
+ArchSec Reviewer analyzes architecture descriptions and generates a structured security review including:
+
+* Assets
+* Trust boundaries
+* Attack paths
+* STRIDE-style threats
+* Security controls
+* Validation checklist
+* Markdown threat model report
+
+The goal is to help security engineers perform faster, more consistent design reviews—not replace human judgment.
+
+---
+
+## Features
+
+* Detects architecture components
+* Identifies trust boundaries
+* Maps potential attack paths
+* Generates STRIDE-style threat scenarios
+* Recommends security controls
+* Produces a Markdown security review
+
+---
+
+## Installation
 
 ```bash
 git clone https://github.com/khirawdhi/archsec-reviewer.git
@@ -32,7 +51,7 @@ pip install -e .
 archsec-review --input examples/rag-system.md --output outputs/rag-threat-model.md
 ```
 
-Or:
+or
 
 ```bash
 python -m archsec_reviewer --input examples/rag-system.md --output outputs/rag-threat-model.md
@@ -40,36 +59,23 @@ python -m archsec_reviewer --input examples/rag-system.md --output outputs/rag-t
 
 ---
 
-## Example Input
+## Example
+
+**Input**
 
 ```text
-A RAG assistant accepts user questions, retrieves documents from a vector database,
-sends context to an LLM, and may call tools such as ticket creation or refund APIs.
+A RAG assistant accepts user questions, retrieves documents from a vector database, sends context to an LLM, and can call external tools such as a refund API.
 ```
 
----
+**Generated Report**
 
-## Example Output
-
-The generated report includes:
-
-- system summary
-- detected components
-- trust boundaries
-- attack paths
-- threat scenarios
-- security recommendations
-- validation checklist
-
----
-
-## Best For
-
-- Security architecture reviews
-- Product security design reviews
-- Threat modeling workshops
-- AI / LLM system reviews
-- Cloud-native and distributed system reviews
+* System summary
+* Detected components
+* Trust boundaries
+* Attack paths
+* STRIDE threats
+* Recommended controls
+* Validation checklist
 
 ---
 
@@ -77,13 +83,7 @@ The generated report includes:
 
 ```text
 archsec_reviewer/
-  __main__.py
-  cli.py
-  analyzer.py
-  report.py
-  rules.py
 examples/
-  rag-system.md
 outputs/
 README.md
 pyproject.toml
@@ -93,18 +93,18 @@ pyproject.toml
 
 ## Roadmap
 
-- YAML/JSON architecture input
-- Mermaid diagram generation
-- Risk scoring
-- OWASP LLM mapping
-- CI mode for pull requests
-- Local LLM support
+* LLM-powered architecture parsing
+* Mermaid attack-path diagrams
+* Risk scoring
+* OWASP ASVS / LLM Top 10 mapping
+* GitHub PR integration
+* Local LLM support (Ollama)
 
 ---
 
 ## Disclaimer
 
-This tool is intended for defensive security reviews and authorized security assessment workflows only.
+This project is intended for defensive security reviews and authorized security assessment workflows only.
 
 ## License
 
