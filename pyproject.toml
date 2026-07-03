@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "archsec-reviewer"
+version = "0.1.0"
+description = "AI-assisted security architecture review for cloud-native, AI, and distributed systems"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Khirawdhi Ray" }]
+license = { text = "MIT" }
+dependencies = []
+
+[project.scripts]
+archsec-review = "archsec_reviewer.cli:main"
