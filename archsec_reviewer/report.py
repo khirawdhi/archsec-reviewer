@@ -1,7 +1,9 @@
+"""Markdown report rendering for ArchSec Reviewer."""
+
 from .analyzer import Review
 
 
-def _list(items: list[str]) -> str:
+def _bullet_list(items: list[str]) -> str:
     return "\n".join(f"- {item}" for item in items)
 
 
@@ -9,23 +11,29 @@ def _checklist(items: list[str]) -> str:
     return "\n".join(f"- [ ] {item}" for item in items)
 
 
-def _heading(title: str) -> list[str]:
+def _section_heading(title: str) -> list[str]:
     return ["", f"## {title}", ""]
 
 
-def _component_section(title: str, data: dict[str, list[str]], empty: str) -> list[str]:
-    if not data:
-        return _heading(title) + [empty, ""]
+def _grouped_section(
+    title: str,
+    data: dict[str, list[str]],
+    empty_message: str,
+) -> list[str]:
+    lines = _section_heading(title)
 
-    lines = _heading(title)
+    if not data:
+        return lines + [empty_message]
 
     for component, items in data.items():
-        lines.extend([
-            f"### {component}",
-            "",
-            _list(items),
-            "",
-        ])
+        lines.extend(
+            [
+                f"### {component.replace('_', ' ').title()}",
+                "",
+                _bullet_list(items),
+                "",
+            ]
+        )
 
     return lines
 
@@ -40,22 +48,29 @@ def render_markdown_report(review: Review) -> str:
     ]
 
     lines.extend(
-        _heading("Detected Components")
-        + [_list(review.components) if review.components else "- No components detected."]
+        _section_heading("Detected Components")
+        + [
+            _bullet_list(
+                component.replace("_", " ").title()
+                for component in review.components
+            )
+            if review.components
+            else "- No components detected."
+        ]
     )
 
     lines.extend(
-        _heading("Trust Boundaries")
-        + [_list(review.trust_boundaries)]
+        _section_heading("Trust Boundaries")
+        + [_bullet_list(review.trust_boundaries)]
     )
 
     lines.extend(
-        _heading("Attack Paths")
-        + [_list(review.attack_paths)]
+        _section_heading("Attack Paths")
+        + [_bullet_list(review.attack_paths)]
     )
 
     lines.extend(
-        _component_section(
+        _grouped_section(
             "Threat Scenarios",
             review.threats,
             "- No threat scenarios generated.",
@@ -63,7 +78,7 @@ def render_markdown_report(review: Review) -> str:
     )
 
     lines.extend(
-        _component_section(
+        _grouped_section(
             "Recommended Controls",
             review.controls,
             "- No controls generated.",
@@ -71,15 +86,18 @@ def render_markdown_report(review: Review) -> str:
     )
 
     lines.extend(
-        _heading("Validation Checklist")
+        _section_heading("Validation Checklist")
         + [_checklist(review.validation_checks)]
     )
 
-    lines.extend([
-        "",
-        "## Final Note",
-        "",
-        "> Threat model trust transitions, not just components.",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Final Note",
+            "",
+            "> Threat model trust transitions, not just components.",
+            "",
+        ]
+    )
 
     return "\n".join(lines)
