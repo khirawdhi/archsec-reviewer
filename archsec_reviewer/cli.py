@@ -1,3 +1,7 @@
+"""
+Command-line interface for ArchSec Reviewer.
+"""
+
 import argparse
 from pathlib import Path
 
@@ -7,24 +11,54 @@ from .report import render_markdown_report
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Generate a security architecture review from an architecture description."
+        prog="archsec-review",
+        description="Generate a security architecture review from an architecture description.",
     )
-    parser.add_argument("--input", "-i", required=True, help="Path to architecture markdown/text file")
-    parser.add_argument("--output", "-o", required=True, help="Path to output markdown report")
-    parser.add_argument("--title", default="Security Architecture Review", help="Report title")
+
+    parser.add_argument(
+        "-i",
+        "--input",
+        required=True,
+        type=Path,
+        help="Architecture description (Markdown or text).",
+    )
+
+    parser.add_argument(
+        "-o",
+        "--output",
+        required=True,
+        type=Path,
+        help="Output Markdown report.",
+    )
+
+    parser.add_argument(
+        "-t",
+        "--title",
+        default="Security Architecture Review",
+        help="Report title.",
+    )
 
     args = parser.parse_args()
 
-    input_path = Path(args.input)
-    output_path = Path(args.output)
+    if not args.input.is_file():
+        parser.error(f"Input file not found: {args.input}")
 
-    if not input_path.exists():
-        raise FileNotFoundError(f"Input file not found: {input_path}")
+    architecture = args.input.read_text(encoding="utf-8")
 
-    architecture_text = input_path.read_text(encoding="utf-8")
-    review = analyze_architecture(architecture_text, title=args.title)
+    review = analyze_architecture(
+        architecture,
+        title=args.title,
+    )
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(render_markdown_report(review), encoding="utf-8")
+    args.output.parent.mkdir(parents=True, exist_ok=True)
 
-    print(f"[+] Security architecture review generated: {output_path}")
+    args.output.write_text(
+        render_markdown_report(review),
+        encoding="utf-8",
+    )
+
+    print(f"✓ Report written to {args.output}")
+
+
+if __name__ == "__main__":
+    main()
