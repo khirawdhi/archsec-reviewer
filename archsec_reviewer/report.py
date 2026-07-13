@@ -1,71 +1,85 @@
 from .analyzer import Review
 
 
-def _section_list(items):
+def _list(items: list[str]) -> str:
     return "\n".join(f"- {item}" for item in items)
 
 
+def _checklist(items: list[str]) -> str:
+    return "\n".join(f"- [ ] {item}" for item in items)
+
+
+def _heading(title: str) -> list[str]:
+    return ["", f"## {title}", ""]
+
+
+def _component_section(title: str, data: dict[str, list[str]], empty: str) -> list[str]:
+    if not data:
+        return _heading(title) + [empty, ""]
+
+    lines = _heading(title)
+
+    for component, items in data.items():
+        lines.extend([
+            f"### {component}",
+            "",
+            _list(items),
+            "",
+        ])
+
+    return lines
+
+
 def render_markdown_report(review: Review) -> str:
-    lines = []
+    lines = [
+        f"# {review.title}",
+        "",
+        "## System Summary",
+        "",
+        review.summary or "No summary provided.",
+    ]
 
-    lines.append(f"# {review.title}")
-    lines.append("")
-    lines.append("## System Summary")
-    lines.append("")
-    lines.append(review.summary or "No summary provided.")
-    lines.append("")
+    lines.extend(
+        _heading("Detected Components")
+        + [_list(review.components) if review.components else "- No components detected."]
+    )
 
-    lines.append("## Detected Components")
-    lines.append("")
-    if review.components:
-        lines.append(_section_list(review.components))
-    else:
-        lines.append("- No components detected.")
-    lines.append("")
+    lines.extend(
+        _heading("Trust Boundaries")
+        + [_list(review.trust_boundaries)]
+    )
 
-    lines.append("## Trust Boundaries")
-    lines.append("")
-    lines.append(_section_list(review.trust_boundaries))
-    lines.append("")
+    lines.extend(
+        _heading("Attack Paths")
+        + [_list(review.attack_paths)]
+    )
 
-    lines.append("## Attack Paths")
-    lines.append("")
-    lines.append(_section_list(review.attack_paths))
-    lines.append("")
+    lines.extend(
+        _component_section(
+            "Threat Scenarios",
+            review.threats,
+            "- No threat scenarios generated.",
+        )
+    )
 
-    lines.append("## Threat Scenarios")
-    lines.append("")
-    if review.threats:
-        for component, threats in review.threats.items():
-            lines.append(f"### {component}")
-            lines.append("")
-            lines.append(_section_list(threats))
-            lines.append("")
-    else:
-        lines.append("- No threat scenarios generated.")
-        lines.append("")
+    lines.extend(
+        _component_section(
+            "Recommended Controls",
+            review.controls,
+            "- No controls generated.",
+        )
+    )
 
-    lines.append("## Recommended Controls")
-    lines.append("")
-    if review.controls:
-        for component, controls in review.controls.items():
-            lines.append(f"### {component}")
-            lines.append("")
-            lines.append(_section_list(controls))
-            lines.append("")
-    else:
-        lines.append("- No controls generated.")
-        lines.append("")
+    lines.extend(
+        _heading("Validation Checklist")
+        + [_checklist(review.validation_checks)]
+    )
 
-    lines.append("## Validation Checklist")
-    lines.append("")
-    for item in review.validation_checks:
-        lines.append(f"- [ ] {item}")
-    lines.append("")
-
-    lines.append("## Final Note")
-    lines.append("")
-    lines.append("> Threat model trust transitions, not just components.")
-    lines.append("")
+    lines.extend([
+        "",
+        "## Final Note",
+        "",
+        "> Threat model trust transitions, not just components.",
+    ])
 
     return "\n".join(lines)
