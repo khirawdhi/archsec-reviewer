@@ -4,15 +4,12 @@ from typing import Sequence
 from .rules import (
     ATTACK_PATH_RULES,
     BASE_VALIDATION_CHECKS,
-    COMPONENT_KEYWORDS,
-    COMPONENT_VALIDATION_CHECKS,
-    CONTROL_LIBRARY,
-    THREAT_LIBRARY,
+    COMPONENTS,
     TRUST_BOUNDARY_RULES,
 )
 
 
-Rule = tuple[set[str], str]
+Rule = tuple[frozenset[str], str]
 Library = dict[str, list[str]]
 
 
@@ -33,8 +30,8 @@ def _detect_components(text: str) -> list[str]:
 
     return [
         component
-        for component, keywords in COMPONENT_KEYWORDS.items()
-        if any(keyword in lowered_text for keyword in keywords)
+        for component, definition in COMPONENTS.items()
+        if any(keyword in lowered_text for keyword in definition.keywords)
     ]
 
 
@@ -48,7 +45,7 @@ def _apply_rules(
     matches = [
         message
         for required_components, message in rules
-        if required_components <= component_set
+        if required_components.issubset(component_set)
     ]
 
     return matches or [fallback]
@@ -76,22 +73,26 @@ def _build_attack_paths(components: Sequence[str]) -> list[str]:
     )
 
 
-def _select_library_entries(
+def _build_component_library(
     components: Sequence[str],
-    library: Library,
+    attribute: str,
 ) -> Library:
-    return {
-        component: library[component]
-        for component in components
-        if component in library
-    }
+    library: Library = {}
+
+    for component in components:
+        values = getattr(COMPONENTS[component], attribute)
+
+        if values:
+            library[component] = list(values)
+
+    return library
 
 
 def _build_validation_checks(components: Sequence[str]) -> list[str]:
     checks = list(BASE_VALIDATION_CHECKS)
 
     for component in components:
-        checks.extend(COMPONENT_VALIDATION_CHECKS.get(component, []))
+        checks.extend(COMPONENTS[component].validation_checks)
 
     return checks
 
@@ -108,7 +109,7 @@ def analyze_architecture(
         components=components,
         trust_boundaries=_build_trust_boundaries(components),
         attack_paths=_build_attack_paths(components),
-        threats=_select_library_entries(components, THREAT_LIBRARY),
-        controls=_select_library_entries(components, CONTROL_LIBRARY),
+        threats=_build_component_library(components, "threats"),
+        controls=_build_component_library(components, "controls"),
         validation_checks=_build_validation_checks(components),
     )
