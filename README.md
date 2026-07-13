@@ -4,12 +4,13 @@ AI-assisted security architecture review for cloud-native, AI, and distributed s
 
 > **Turn architecture descriptions into structured security architecture reviews.**
 
-ArchSec Reviewer analyzes system designs and generates:
+ArchSec Reviewer analyzes architecture descriptions and generates:
 
+- Detected architecture components
 - Trust boundaries
 - Attack paths
-- STRIDE-style threat analysis
-- Security recommendations
+- STRIDE-style threat scenarios
+- Recommended security controls
 - Validation checklists
 - Markdown security reports
 
@@ -17,13 +18,13 @@ ArchSec Reviewer analyzes system designs and generates:
 
 ## Features
 
-- Analyze architecture descriptions
-- Detect security-critical components
-- Identify trust boundaries
-- Generate attack paths
-- Perform STRIDE-style threat analysis
-- Recommend security controls
-- Generate Markdown security reports
+- Architecture-aware component detection
+- Trust boundary identification
+- Attack path generation
+- STRIDE-style threat modeling
+- Security control recommendations
+- Validation checklists
+- Markdown report generation
 
 ---
 
@@ -32,38 +33,36 @@ ArchSec Reviewer analyzes system designs and generates:
 ### Input
 
 ```text
-A customer support RAG assistant accepts user questions through a web application.
-
-The backend retrieves relevant documents from a vector database before sending the prompt to an LLM.
-
-For selected requests, the AI agent can invoke backend APIs such as Refund, Ticket Creation, and Customer Profile services.
-
-OAuth is used for service-to-service authentication.
+A customer support RAG assistant accepts user questions, retrieves documents
+from a vector database, sends context to an LLM, and can invoke Refund and
+Ticket APIs.
 ```
 
-↓
-
-### Generated Report
+### Output
 
 ```text
-Overall Risk: HIGH
-
-Top Risks
-• Prompt Injection
-• Retrieval Data Poisoning
-• Unauthorized Tool Execution
+Detected Components
+- User
+- API
+- Vector Database
+- LLM
+- Tool Execution
 
 Trust Boundaries
-• User → API
-• API → Vector Database
-• Vector Database → LLM
-• LLM → Tool Execution
+- User → API
+- API → Retrieval Layer
+- Vector Database → LLM
+- LLM → Tool Execution
+
+Attack Paths
+- Prompt Injection → Unauthorized Tool Execution
+- Retrieval Data Poisoning → Manipulated LLM Output
 
 Recommended Controls
-• Retrieval Authorization
-• Prompt Isolation
-• Output Filtering
-• Tool Allowlists
+- Prompt isolation
+- Retrieval authorization
+- Tool allowlists
+- Least-privilege credentials
 ```
 
 ---
@@ -82,16 +81,15 @@ pip install -e .
 
 ```bash
 archsec-review \
-  --input examples/rag-system.md \
-  --output reports/security-review.md
+    --input examples/rag-threat-model.md \
+    --output reports/security-review.md
 ```
 
-or
+Example output:
 
-```bash
-python -m archsec_reviewer \
-  --input examples/rag-system.md \
-  --output reports/security-review.md
+```
+reports/
+└── security-review.md
 ```
 
 ---
@@ -104,61 +102,28 @@ archsec_reviewer/
 ├── cli.py
 ├── report.py
 ├── rules.py
-├── __main__.py
-└── __init__.py
+├── __init__.py
+└── __main__.py
 
 examples/
-reports/
+└── rag-threat-model.md
 
+reports/
 README.md
 pyproject.toml
-LICENSE
 ```
-
----
-
-## Current Status
-
-**MVP (v0.1)**
-
-Current capabilities:
-
-- Rule-based architecture analysis
-- Component detection
-- Trust boundary identification
-- Attack path generation
-- STRIDE-style threat analysis
-- Security control recommendations
-- Markdown report generation
 
 ---
 
 ## Roadmap
 
 - LLM-powered architecture parsing
+- Mermaid architecture and attack-path diagrams
 - Risk scoring
-- Mermaid attack graphs
-- OWASP ASVS & OWASP Top 10 for LLM Applications mapping
-- MITRE ATT&CK / ATLAS mapping
-- GitHub Pull Request integration
-- Local LLM support
-- Architecture diagram ingestion (Draw.io, Mermaid, PlantUML)
-
----
-
-## Who It's For
-
-- Product Security Engineers
-- Security Architects
-- Application Security Engineers
-- Cloud & Platform Engineers
-- Developers building AI and distributed systems
-
----
-
-## Disclaimer
-
-This project is intended for defensive security reviews and authorized security assessment workflows only.
+- OWASP ASVS & OWASP LLM Top 10 mapping
+- MITRE ATT&CK / MITRE ATLAS mapping
+- GitHub Pull Request reviews
+- Local LLM support (Ollama)
 
 ---
 

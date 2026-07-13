@@ -1,3 +1,5 @@
+"""Architecture analysis engine for ArchSec Reviewer."""
+
 from dataclasses import dataclass, field
 from typing import Sequence
 
@@ -73,19 +75,20 @@ def _build_attack_paths(components: Sequence[str]) -> list[str]:
     )
 
 
-def _build_component_library(
-    components: Sequence[str],
-    attribute: str,
-) -> Library:
-    library: Library = {}
+def _build_threats(components: Sequence[str]) -> Library:
+    return {
+        component: list(COMPONENTS[component].threats)
+        for component in components
+        if COMPONENTS[component].threats
+    }
 
-    for component in components:
-        values = getattr(COMPONENTS[component], attribute)
 
-        if values:
-            library[component] = list(values)
-
-    return library
+def _build_controls(components: Sequence[str]) -> Library:
+    return {
+        component: list(COMPONENTS[component].controls)
+        for component in components
+        if COMPONENTS[component].controls
+    }
 
 
 def _build_validation_checks(components: Sequence[str]) -> list[str]:
@@ -109,7 +112,7 @@ def analyze_architecture(
         components=components,
         trust_boundaries=_build_trust_boundaries(components),
         attack_paths=_build_attack_paths(components),
-        threats=_build_component_library(components, "threats"),
-        controls=_build_component_library(components, "controls"),
+        threats=_build_threats(components),
+        controls=_build_controls(components),
         validation_checks=_build_validation_checks(components),
     )

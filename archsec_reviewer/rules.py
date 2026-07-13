@@ -1,3 +1,5 @@
+"""Security rules and component definitions for ArchSec Reviewer."""
+
 from dataclasses import dataclass, field
 
 
@@ -7,6 +9,12 @@ class ComponentDefinition:
     threats: tuple[str, ...] = field(default_factory=tuple)
     controls: tuple[str, ...] = field(default_factory=tuple)
     validation_checks: tuple[str, ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
+class RuleDefinition:
+    required_components: frozenset[str]
+    message: str
 
 
 COMPONENTS: dict[str, ComponentDefinition] = {
@@ -220,67 +228,77 @@ COMPONENTS: dict[str, ComponentDefinition] = {
 }
 
 
-TRUST_BOUNDARY_RULES: tuple[tuple[frozenset[str], str], ...] = (
-    (
-        frozenset({"user", "api"}),
-        "User / Client → API or application boundary",
+TRUST_BOUNDARY_RULES: tuple[RuleDefinition, ...] = (
+    RuleDefinition(
+        required_components=frozenset({"user", "api"}),
+        message="User / Client → API or application boundary",
     ),
-    (
-        frozenset({"api", "database"}),
-        "Application service → Database boundary",
+    RuleDefinition(
+        required_components=frozenset({"api", "database"}),
+        message="Application service → Database boundary",
     ),
-    (
-        frozenset({"api", "vector_db"}),
-        "Application service → Retrieval / vector database boundary",
+    RuleDefinition(
+        required_components=frozenset({"api", "vector_db"}),
+        message="Application service → Retrieval / vector database boundary",
     ),
-    (
-        frozenset({"vector_db", "llm"}),
-        "Retrieved context → LLM prompt construction boundary",
+    RuleDefinition(
+        required_components=frozenset({"vector_db", "llm"}),
+        message="Retrieved context → LLM prompt construction boundary",
     ),
-    (
-        frozenset({"llm", "tool"}),
-        "LLM reasoning → Tool / action execution boundary",
+    RuleDefinition(
+        required_components=frozenset({"llm", "tool"}),
+        message="LLM reasoning → Tool / action execution boundary",
     ),
-    (
-        frozenset({"api", "third_party"}),
-        "Internal service → External vendor / third-party boundary",
+    RuleDefinition(
+        required_components=frozenset({"api", "third_party"}),
+        message="Internal service → External vendor / third-party boundary",
     ),
-    (
-        frozenset({"ci_cd"}),
-        "Source code → Build pipeline → Artifact → Deployment boundary",
+    RuleDefinition(
+        required_components=frozenset({"ci_cd"}),
+        message="Source code → Build pipeline → Artifact → Deployment boundary",
     ),
-    (
-        frozenset({"identity", "api"}),
-        "Identity provider / token issuer → Service authorization boundary",
+    RuleDefinition(
+        required_components=frozenset({"identity", "api"}),
+        message="Identity provider / token issuer → Service authorization boundary",
     ),
 )
 
 
-ATTACK_PATH_RULES: tuple[tuple[frozenset[str], str], ...] = (
-    (
-        frozenset({"user", "api", "vector_db", "llm"}),
-        "Malicious user input → retrieval query manipulation → "
-        "unsafe context → insecure LLM response",
+ATTACK_PATH_RULES: tuple[RuleDefinition, ...] = (
+    RuleDefinition(
+        required_components=frozenset({"user", "api", "vector_db", "llm"}),
+        message=(
+            "Malicious user input → retrieval query manipulation → "
+            "unsafe context → insecure LLM response"
+        ),
     ),
-    (
-        frozenset({"vector_db", "llm"}),
-        "Poisoned knowledge base document → retrieved as trusted context → "
-        "manipulated model output",
+    RuleDefinition(
+        required_components=frozenset({"vector_db", "llm"}),
+        message=(
+            "Poisoned knowledge base document → retrieved as trusted context → "
+            "manipulated model output"
+        ),
     ),
-    (
-        frozenset({"llm", "tool"}),
-        "Prompt injection → unauthorized tool selection → "
-        "sensitive action execution",
+    RuleDefinition(
+        required_components=frozenset({"llm", "tool"}),
+        message=(
+            "Prompt injection → unauthorized tool selection → "
+            "sensitive action execution"
+        ),
     ),
-    (
-        frozenset({"ci_cd", "storage"}),
-        "Compromised build pipeline → malicious artifact → "
-        "deployment to runtime environment",
+    RuleDefinition(
+        required_components=frozenset({"ci_cd", "storage"}),
+        message=(
+            "Compromised build pipeline → malicious artifact → "
+            "deployment to runtime environment"
+        ),
     ),
-    (
-        frozenset({"identity", "api"}),
-        "Stolen or over-scoped token → service access → "
-        "lateral movement across APIs",
+    RuleDefinition(
+        required_components=frozenset({"identity", "api"}),
+        message=(
+            "Stolen or over-scoped token → service access → "
+            "lateral movement across APIs"
+        ),
     ),
 )
 

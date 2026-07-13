@@ -1,240 +1,96 @@
-# Security Architecture Review
+# RAG Threat Model Example
 
-**System:** Customer Support RAG Assistant
+## System Overview
 
----
+A customer support assistant uses Retrieval-Augmented Generation (RAG) to answer user questions.
 
-# Executive Summary
-
-**Overall Risk:** 🔴 High
-
-This architecture follows a typical Retrieval-Augmented Generation (RAG) pattern with external tool execution. The primary security risks are untrusted retrieval, prompt injection, and unauthorized tool execution.
-
-### Top Risks
-
-| Priority | Risk                        | Severity |
-| -------- | --------------------------- | -------- |
-| 1        | Prompt Injection            | Critical |
-| 2        | Retrieval Data Poisoning    | High     |
-| 3        | Unauthorized Tool Execution | High     |
-| 4        | Over-scoped OAuth Tokens    | Medium   |
-| 5        | Sensitive Data Leakage      | Medium   |
+The application retrieves relevant documents from a Vector Database, sends the retrieved context and user prompt to an LLM, and allows an AI Agent to invoke backend APIs for approved actions such as ticket creation and refund processing.
 
 ---
 
-# System Overview
+## Architecture
 
-The application accepts user questions, retrieves relevant documents from a vector database, sends the retrieved context to an LLM, and allows the LLM to invoke external tools such as refund and ticket APIs.
+### Components
 
----
-
-# Detected Components
-
-* User
-* Web API
-* Vector Database
-* LLM Inference
-* Tool Execution Layer
-* OAuth Identity Provider
-* Cloud Object Storage
-
----
-
-# Critical Assets
-
-* Customer Support Knowledge Base
-* OAuth Access Tokens
-* Customer Data
-* Refund API
-* Ticket API
-* LLM Context Window
-* Audit Logs
+- User
+- Web Application
+- Backend API
+- OAuth Identity Provider
+- Retrieval Service
+- Vector Database
+- LLM Inference Service
+- AI Agent
+- Ticket API
+- Refund API
+- Customer Profile API
+- Cloud Object Storage
 
 ---
 
-# Trust Boundaries
+### Data Flow
 
-| Boundary              | Trust Transition              |
-| --------------------- | ----------------------------- |
-| User → API            | External → Internal           |
-| API → Vector Database | Application → Data Store      |
-| Vector Database → LLM | Retrieved Context → AI        |
-| LLM → Tool Execution  | AI Decision → External Action |
-| API → OAuth Provider  | Identity Validation           |
-| API → Cloud Storage   | Internal → Persistent Storage |
-
----
-
-# Attack Paths
-
-### Attack Path 1 — Prompt Injection
-
-User Input
-
-↓
-
-Prompt Injection
-
-↓
-
-LLM
-
-↓
-
-Unauthorized Tool Selection
-
-↓
-
-Refund API
-
-**Risk:** Critical
+1. User authenticates through the Web Application.
+2. Backend API validates the OAuth access token.
+3. Retrieval Service queries the Vector Database.
+4. Retrieved documents are added to the prompt.
+5. Prompt is sent to the LLM.
+6. The AI Agent may invoke backend APIs.
+7. Backend API returns the response.
+8. Audit logs are written to Cloud Object Storage.
 
 ---
 
-### Attack Path 2 — Retrieval Data Poisoning
+## Assets
 
-Malicious Document
-
-↓
-
-Knowledge Base
-
-↓
-
-Vector Retrieval
-
-↓
-
-LLM Context
-
-↓
-
-Unsafe Response
-
-**Risk:** High
+- Customer profile information
+- Customer support knowledge base
+- OAuth access tokens
+- Refund capability
+- Ticket management system
+- LLM context
+- Audit logs
 
 ---
 
-### Attack Path 3 — Token Misuse
+## Trust Boundaries
 
-Compromised OAuth Token
-
-↓
-
-API
-
-↓
-
-Internal Services
-
-↓
-
-Privilege Escalation
-
-**Risk:** Medium
+- User → Web Application
+- Web Application → Backend API
+- Backend API → Retrieval Service
+- Retrieval Service → Vector Database
+- Vector Database → LLM
+- LLM → AI Agent
+- AI Agent → Backend APIs
+- Backend API → Cloud Storage
 
 ---
 
-# STRIDE Analysis
+## External Dependencies
 
-| Component       | Threat                                         |
-| --------------- | ---------------------------------------------- |
-| API             | Spoofing, Tampering                            |
-| Vector Database | Tampering, Information Disclosure              |
-| LLM             | Information Disclosure, Elevation of Privilege |
-| Tool Execution  | Elevation of Privilege                         |
-| OAuth           | Spoofing, Elevation of Privilege               |
+- OAuth Identity Provider
+- LLM Provider
+- Ticket Management Service
+- Payment Service
 
 ---
 
-# Recommended Controls
+## Security Assumptions
 
-## API
-
-* Enforce authentication and authorization
-* Validate all user input
-* Apply rate limiting
-* Enable structured audit logging
-
-## Vector Database
-
-* Verify document provenance
-* Maintain trusted document allowlists
-* Enforce retrieval-time authorization
-* Separate trusted and untrusted indexes
-
-## LLM
-
-* Isolate system prompts
-* Minimize supplied context
-* Apply output filtering
-* Detect prompt injection attempts
-
-## Tool Execution
-
-* Require explicit authorization
-* Restrict available tools
-* Use least-privilege credentials
-* Require human approval for sensitive actions
-
-## Identity
-
-* Short-lived OAuth tokens
-* Audience validation
-* Token rotation
-* Mutual TLS for service-to-service communication where appropriate
+- OAuth tokens are validated for every request.
+- Only trusted documents are indexed into the Vector Database.
+- The LLM cannot directly access databases.
+- AI actions are executed through backend APIs.
+- Service-to-service communication is authenticated.
+- Audit logs are immutable.
 
 ---
 
-# Validation Checklist
+## Security Objectives
 
-* [ ] Attempt prompt injection against the system prompt.
-* [ ] Verify unauthorized documents cannot be retrieved.
-* [ ] Confirm retrieval respects user authorization.
-* [ ] Verify output filtering blocks sensitive information.
-* [ ] Confirm tool execution requires authorization.
-* [ ] Verify OAuth tokens cannot be reused across services.
-* [ ] Review audit logs for denied requests and security events.
-
----
-
-# Architecture Observations
-
-### Positive Findings
-
-* OAuth-based service authentication detected.
-* Retrieval layer separated from the application.
-* External tool execution isolated.
-* Audit logging present.
-
-### Areas for Improvement
-
-* Document provenance is not verified.
-* Retrieval authorization is not explicitly defined.
-* Tool execution approval workflow is missing.
-* Output filtering is not evident.
-* Token scope should be reviewed.
-
----
-
-# Remediation Roadmap
-
-### High Priority
-
-1. Implement retrieval-time authorization.
-2. Add document provenance verification.
-3. Restrict tool execution with allowlists and approval.
-4. Deploy prompt injection detection.
-5. Apply output filtering before responding to users.
-
-### Medium Priority
-
-1. Reduce OAuth token scope.
-2. Strengthen audit logging.
-3. Review cloud storage permissions.
-
----
-
-# Final Assessment
-
-The architecture demonstrates a sound high-level design but contains several high-impact trust boundaries that require additional controls before deployment. The most critical improvements are securing the retrieval pipeline, constraining tool execution, and enforcing authorization across AI interactions.
+- Prevent prompt injection.
+- Prevent retrieval data poisoning.
+- Prevent unauthorized tool execution.
+- Protect customer data.
+- Enforce authorization for retrieved documents.
+- Preserve audit log integrity.
+- Apply least privilege to AI actions.
