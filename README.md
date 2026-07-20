@@ -81,7 +81,7 @@ pip install -e .
 
 ```bash
 archsec-review \
-    --input examples/rag-threat-model.md \
+    --input examples/rag-system.md \
     --output reports/security-review.md
 ```
 

@@ -1,7 +1,7 @@
 """
-ArchSec Reviewer
+ArchSec Reviewer.
 
-AI-assisted security architecture review for cloud-native,
+Security architecture analysis for cloud-native,
 AI, and distributed systems.
 """
 

@@ -13,8 +13,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="archsec-review",
         description=(
-            "Generate a security architecture review from an "
-            "architecture description."
+            "Generate a security architecture review from an architecture description."
         ),
     )
 

@@ -1,45 +1,24 @@
-"""Markdown report rendering for ArchSec Reviewer."""
+"""Markdown report renderer for ArchSec Reviewer."""
+
+from collections.abc import Iterable
 
 from .analyzer import Review
 
 
-def _bullet_list(items: list[str]) -> str:
+def _bullet_list(items: Iterable[str]) -> str:
     return "\n".join(f"- {item}" for item in items)
 
 
-def _checklist(items: list[str]) -> str:
+def _checklist(items: Iterable[str]) -> str:
     return "\n".join(f"- [ ] {item}" for item in items)
 
 
-def _section_heading(title: str) -> list[str]:
+def _heading(title: str) -> list[str]:
     return ["", f"## {title}", ""]
 
 
-def _grouped_section(
-    title: str,
-    data: dict[str, list[str]],
-    empty_message: str,
-) -> list[str]:
-    lines = _section_heading(title)
-
-    if not data:
-        return lines + [empty_message]
-
-    for component, items in data.items():
-        lines.extend(
-            [
-                f"### {component.replace('_', ' ').title()}",
-                "",
-                _bullet_list(items),
-                "",
-            ]
-        )
-
-    return lines
-
-
-def render_markdown_report(review: Review) -> str:
-    lines = [
+def _render_summary(review: Review) -> list[str]:
+    return [
         f"# {review.title}",
         "",
         "## System Summary",
@@ -47,57 +26,92 @@ def render_markdown_report(review: Review) -> str:
         review.summary or "No summary provided.",
     ]
 
-    lines.extend(
-        _section_heading("Detected Components")
-        + [
-            _bullet_list(
-                component.replace("_", " ").title()
-                for component in review.components
-            )
-            if review.components
-            else "- No components detected."
-        ]
-    )
 
-    lines.extend(
-        _section_heading("Trust Boundaries")
-        + [_bullet_list(review.trust_boundaries)]
-    )
+def _render_components(review: Review) -> list[str]:
+    lines = _heading("Detected Components")
 
-    lines.extend(
-        _section_heading("Attack Paths")
-        + [_bullet_list(review.attack_paths)]
-    )
+    if review.components:
+        formatted = (
+            component.replace("_", " ").title() for component in review.components
+        )
+        lines.append(_bullet_list(formatted))
+    else:
+        lines.append("- No components detected.")
 
-    lines.extend(
-        _grouped_section(
+    return lines
+
+
+def _render_list_section(title: str, items: Iterable[str]) -> list[str]:
+    return _heading(title) + [_bullet_list(items)]
+
+
+def _render_grouped_section(
+    title: str,
+    groups: dict[str, list[str]],
+    empty_message: str,
+) -> list[str]:
+    lines = _heading(title)
+
+    if not groups:
+        lines.append(empty_message)
+        return lines
+
+    for component, values in groups.items():
+        lines.extend(
+            [
+                f"### {component.replace('_', ' ').title()}",
+                "",
+                _bullet_list(values),
+                "",
+            ]
+        )
+
+    return lines
+
+
+def _render_validation(review: Review) -> list[str]:
+    return _heading("Validation Checklist") + [_checklist(review.validation_checks)]
+
+
+def _render_footer() -> list[str]:
+    return [
+        "",
+        "## Final Note",
+        "",
+        "> Threat model trust transitions, not just components.",
+    ]
+
+
+def render_markdown_report(review: Review) -> str:
+    lines: list[str] = []
+
+    renderers = [
+        _render_summary,
+        _render_components,
+        lambda r: _render_list_section(
+            "Trust Boundaries",
+            r.trust_boundaries,
+        ),
+        lambda r: _render_list_section(
+            "Attack Paths",
+            r.attack_paths,
+        ),
+        lambda r: _render_grouped_section(
             "Threat Scenarios",
-            review.threats,
+            r.threats,
             "- No threat scenarios generated.",
-        )
-    )
-
-    lines.extend(
-        _grouped_section(
+        ),
+        lambda r: _render_grouped_section(
             "Recommended Controls",
-            review.controls,
+            r.controls,
             "- No controls generated.",
-        )
-    )
+        ),
+        _render_validation,
+    ]
 
-    lines.extend(
-        _section_heading("Validation Checklist")
-        + [_checklist(review.validation_checks)]
-    )
+    for renderer in renderers:
+        lines.extend(renderer(review))
 
-    lines.extend(
-        [
-            "",
-            "## Final Note",
-            "",
-            "> Threat model trust transitions, not just components.",
-            "",
-        ]
-    )
+    lines.extend(_render_footer())
 
     return "\n".join(lines)

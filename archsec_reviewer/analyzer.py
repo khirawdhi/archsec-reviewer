@@ -8,10 +8,10 @@ from .rules import (
     BASE_VALIDATION_CHECKS,
     COMPONENTS,
     TRUST_BOUNDARY_RULES,
+    RuleDefinition,
 )
 
 
-Rule = tuple[frozenset[str], str]
 Library = dict[str, list[str]]
 
 
@@ -39,15 +39,15 @@ def _detect_components(text: str) -> list[str]:
 
 def _apply_rules(
     components: Sequence[str],
-    rules: Sequence[Rule],
+    rules: Sequence[RuleDefinition],
     fallback: str,
 ) -> list[str]:
     component_set = set(components)
 
     matches = [
-        message
-        for required_components, message in rules
-        if required_components.issubset(component_set)
+        rule.message
+        for rule in rules
+        if rule.required_components.issubset(component_set)
     ]
 
     return matches or [fallback]
