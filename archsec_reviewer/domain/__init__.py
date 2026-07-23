@@ -1,5 +1,7 @@
 """Public domain models for structured architecture analysis."""
 
+from .attack_path import AttackPath, TrustTransition
+
 from .architecture import (
     Architecture,
     Asset,
@@ -23,6 +25,7 @@ from .finding import (
 __all__ = [
     "Architecture",
     "Asset",
+    "AttackPath",
     "Component",
     "ComponentType",
     "Confidence",
@@ -35,5 +38,6 @@ __all__ = [
     "StandardReference",
     "ThreatCategory",
     "TrustLevel",
+    "TrustTransition",
     "TrustZone",
 ]
