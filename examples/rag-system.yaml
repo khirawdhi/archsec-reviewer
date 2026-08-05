@@ -1,0 +1,215 @@
+name: Customer Support RAG Assistant
+
+trust_zones:
+  - id: internet
+    name: Internet
+    trust_level: untrusted
+
+  - id: edge
+    name: Application Edge
+    trust_level: internal
+    owner: Platform Team
+
+  - id: application
+    name: Application Services
+    trust_level: internal
+    owner: Support Engineering
+
+  - id: data
+    name: Data Services
+    trust_level: privileged
+    owner: Data Platform
+
+  - id: external_ai
+    name: External AI Provider
+    trust_level: external
+    owner: AI Platform Team
+
+  - id: privileged
+    name: Privileged Business Operations
+    trust_level: privileged
+    owner: Payments Team
+
+components:
+  - id: customer
+    name: Customer
+    type: user
+    trust_zone: internet
+
+  - id: web_app
+    name: Support Web Application
+    type: web_application
+    trust_zone: edge
+    data_handled:
+      - user prompt
+      - session token
+
+  - id: backend_api
+    name: Backend API
+    type: api
+    trust_zone: application
+    privileges:
+      - query customer profile
+      - invoke retrieval service
+
+  - id: identity_provider
+    name: OAuth Identity Provider
+    type: identity_provider
+    trust_zone: external_ai
+
+  - id: vector_db
+    name: Support Vector Database
+    type: vector_database
+    trust_zone: data
+    data_handled:
+      - support documents
+      - document embeddings
+
+  - id: llm
+    name: LLM Inference Service
+    type: llm
+    trust_zone: external_ai
+    data_handled:
+      - user prompt
+      - retrieved context
+
+  - id: refund_tool
+    name: Refund Tool
+    type: tool
+    trust_zone: privileged
+    privileges:
+      - issue customer refund
+
+  - id: customer_db
+    name: Customer Database
+    type: database
+    trust_zone: data
+    data_handled:
+      - customer profile
+      - account information
+
+  - id: audit_storage
+    name: Audit Storage
+    type: storage
+    trust_zone: data
+    data_handled:
+      - security events
+      - tool execution records
+
+assets:
+  - id: customer_records
+    name: Customer Records
+    classification: restricted
+    owner_component: customer_db
+
+  - id: support_knowledge
+    name: Support Knowledge Base
+    classification: confidential
+    owner_component: vector_db
+
+  - id: refund_capability
+    name: Refund Capability
+    classification: restricted
+    owner_component: refund_tool
+
+  - id: audit_logs
+    name: Security Audit Logs
+    classification: confidential
+    owner_component: audit_storage
+
+data_flows:
+  - id: customer_to_web
+    source: customer
+    destination: web_app
+    data:
+      - user prompt
+      - session token
+    protocol: HTTPS
+    authenticated: true
+    encrypted: true
+
+  - id: web_to_backend
+    source: web_app
+    destination: backend_api
+    data:
+      - authenticated request
+    protocol: HTTPS
+    authenticated: true
+    encrypted: true
+
+  - id: backend_to_identity
+    source: backend_api
+    destination: identity_provider
+    data:
+      - access token
+    protocol: HTTPS
+    authenticated: true
+    encrypted: true
+
+  - id: backend_to_vector
+    source: backend_api
+    destination: vector_db
+    data:
+      - retrieval query
+      - user authorization context
+    protocol: HTTPS
+    authenticated: true
+    encrypted: true
+
+  - id: vector_to_llm
+    source: vector_db
+    destination: llm
+    data:
+      - retrieved support documents
+    protocol: HTTPS
+    authenticated: true
+    encrypted: true
+
+  - id: llm_to_refund
+    source: llm
+    destination: refund_tool
+    data:
+      - requested refund action
+    protocol: HTTPS
+    authenticated: true
+    encrypted: true
+
+  - id: backend_to_customer_db
+    source: backend_api
+    destination: customer_db
+    data:
+      - customer profile query
+    protocol: TLS
+    authenticated: true
+    encrypted: true
+
+  - id: backend_to_audit
+    source: backend_api
+    destination: audit_storage
+    data:
+      - application security event
+    protocol: TLS
+    authenticated: true
+    encrypted: true
+
+  - id: refund_to_audit
+    source: refund_tool
+    destination: audit_storage
+    data:
+      - refund execution record
+    protocol: TLS
+    authenticated: true
+    encrypted: true
+
+assumptions:
+  - OAuth tokens are validated for every backend request.
+  - Only approved documents are indexed into the vector database.
+  - Tool execution is mediated by backend authorization.
+  - Audit logs are immutable after creation.
+
+security_objectives:
+  - Prevent prompt and retrieval-based instruction injection.
+  - Prevent unauthorized refund execution.
+  - Enforce document-level retrieval authorization.
+  - Protect customer records from unauthorized disclosure.
+  - Preserve audit-log integrity.
