@@ -80,24 +80,16 @@ def _prioritize_path(
     if target is not None:
         if target.type is ComponentType.TOOL:
             score += 3
-            factors.append(
-                "+3 Target is an executable tool."
-            )
+            factors.append("+3 Target is an executable tool.")
 
-        zone_levels = {
-            zone.id: zone.trust_level
-            for zone in architecture.trust_zones
-        }
+        zone_levels = {zone.id: zone.trust_level for zone in architecture.trust_zones}
 
         if (
             target.trust_zone is not None
-            and zone_levels.get(target.trust_zone)
-            is TrustLevel.PRIVILEGED
+            and zone_levels.get(target.trust_zone) is TrustLevel.PRIVILEGED
         ):
             score += 3
-            factors.append(
-                "+3 Target is in a privileged trust zone."
-            )
+            factors.append("+3 Target is in a privileged trust zone.")
 
     transition_score = min(
         len(path.trust_transitions),
@@ -153,10 +145,7 @@ def _target_asset_factor(
 
     return (
         score,
-        (
-            f"+{score} Target owns a "
-            f"{classification.value} asset."
-        ),
+        (f"+{score} Target owns a {classification.value} asset."),
     )
 
 
@@ -180,10 +169,7 @@ def _finding_factor(
         return 0, None
 
     highest_severity = max(
-        (
-            finding.severity
-            for finding in related_findings
-        ),
+        (finding.severity for finding in related_findings),
         key=lambda severity: SEVERITY_SCORES[severity],
     )
     score = SEVERITY_SCORES[highest_severity]
@@ -193,11 +179,7 @@ def _finding_factor(
 
     return (
         score,
-        (
-            f"+{score} Path contains "
-            f"{highest_severity.value}-severity "
-            "flow findings."
-        ),
+        (f"+{score} Path contains {highest_severity.value}-severity flow findings."),
     )
 
 

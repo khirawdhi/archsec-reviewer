@@ -46,5 +46,5 @@ __all__ = [
     "TrustTransition",
     "TrustZone",
     "SecurityReview",
-    "PathPriority"
+    "PathPriority",
 ]
