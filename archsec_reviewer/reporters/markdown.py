@@ -350,11 +350,27 @@ def _render_attack_paths(
                 f"- **Entry point:** {_text(path.entry_point)}",
                 f"- **Target:** {_text(path.target)}",
                 f"- **Hop count:** {path.hop_count}",
+                f"- **Priority:** {_text(path.priority.value)}",
+                f"- **Priority score:** {path.priority_score}",
                 ("- **Route:** " + " → ".join(_text(node) for node in path.nodes)),
                 (
                     "- **Flow evidence:** "
                     + ", ".join(_text(flow_id) for flow_id in path.flow_ids)
                 ),
+                "",
+                "#### Priority Factors",
+                "",
+            ]
+        )
+
+        if not path.priority_factors:
+            lines.append("- No additional priority factors.")
+        else:
+            for factor in path.priority_factors:
+                lines.append(f"- {_text(factor)}")
+
+        lines.extend(
+            [
                 "",
                 "#### Trust Transitions",
                 "",

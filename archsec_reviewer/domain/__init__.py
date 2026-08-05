@@ -1,6 +1,10 @@
 """Public domain models for structured architecture analysis."""
 
-from .attack_path import AttackPath, TrustTransition
+from .attack_path import (
+    AttackPath,
+    PathPriority,
+    TrustTransition,
+)
 from .review import SecurityReview
 
 from .architecture import (
@@ -42,4 +46,5 @@ __all__ = [
     "TrustTransition",
     "TrustZone",
     "SecurityReview",
+    "PathPriority"
 ]

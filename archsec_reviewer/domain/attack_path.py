@@ -1,6 +1,16 @@
 """Attack-path domain model."""
 
 from dataclasses import dataclass
+from enum import Enum
+
+
+class PathPriority(str, Enum):
+    """Review priority assigned to an attack path."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
 
 
 @dataclass(frozen=True)
@@ -24,6 +34,9 @@ class AttackPath:
     nodes: tuple[str, ...]
     flow_ids: tuple[str, ...]
     trust_transitions: tuple[TrustTransition, ...]
+    priority: PathPriority = PathPriority.LOW
+    priority_score: int = 0
+    priority_factors: tuple[str, ...] = ()
 
     @property
     def hop_count(self) -> int:

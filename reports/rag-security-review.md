@@ -133,80 +133,23 @@ Manipulated model output can request a consequential tool operation without inde
 
 ## Attack Paths
 
-### AP-001
-
-- **Entry point:** llm
-- **Target:** refund_tool
-- **Hop count:** 1
-- **Route:** llm → refund_tool
-- **Flow evidence:** llm_to_refund
-
-#### Trust Transitions
-
-- llm (external_ai) → refund_tool (privileged)
-
-### AP-002
-
-- **Entry point:** llm
-- **Target:** audit_storage
-- **Hop count:** 2
-- **Route:** llm → refund_tool → audit_storage
-- **Flow evidence:** llm_to_refund, refund_to_audit
-
-#### Trust Transitions
-
-- llm (external_ai) → refund_tool (privileged)
-- refund_tool (privileged) → audit_storage (data)
-
-### AP-003
-
-- **Entry point:** customer
-- **Target:** audit_storage
-- **Hop count:** 3
-- **Route:** customer → web_app → backend_api → audit_storage
-- **Flow evidence:** customer_to_web, web_to_backend, backend_to_audit
-
-#### Trust Transitions
-
-- customer (internet) → web_app (edge)
-- web_app (edge) → backend_api (application)
-- backend_api (application) → audit_storage (data)
-
-### AP-004
-
-- **Entry point:** customer
-- **Target:** customer_db
-- **Hop count:** 3
-- **Route:** customer → web_app → backend_api → customer_db
-- **Flow evidence:** customer_to_web, web_to_backend, backend_to_customer_db
-
-#### Trust Transitions
-
-- customer (internet) → web_app (edge)
-- web_app (edge) → backend_api (application)
-- backend_api (application) → customer_db (data)
-
-### AP-005
-
-- **Entry point:** customer
-- **Target:** vector_db
-- **Hop count:** 3
-- **Route:** customer → web_app → backend_api → vector_db
-- **Flow evidence:** customer_to_web, web_to_backend, backend_to_vector
-
-#### Trust Transitions
-
-- customer (internet) → web_app (edge)
-- web_app (edge) → backend_api (application)
-- backend_api (application) → vector_db (data)
-
 ### AP-006
 
 - **Entry point:** customer
 - **Target:** refund_tool
 - **Hop count:** 5
+- **Priority:** critical
+- **Priority score:** 17
 - **Route:** customer → web_app → backend_api → vector_db → llm → refund_tool
 - **Flow evidence:** customer_to_web, web_to_backend, backend_to_vector, vector_to_llm, llm_to_refund
+
+#### Priority Factors
+
+- +4 Target owns a restricted asset.
+- +3 Target is an executable tool.
+- +3 Target is in a privileged trust zone.
+- +3 Path crosses 5 trust boundaries.
+- +4 Path contains high-severity flow findings.
 
 #### Trust Transitions
 
@@ -214,6 +157,28 @@ Manipulated model output can request a consequential tool operation without inde
 - web_app (edge) → backend_api (application)
 - backend_api (application) → vector_db (data)
 - vector_db (data) → llm (external_ai)
+- llm (external_ai) → refund_tool (privileged)
+
+### AP-001
+
+- **Entry point:** llm
+- **Target:** refund_tool
+- **Hop count:** 1
+- **Priority:** critical
+- **Priority score:** 15
+- **Route:** llm → refund_tool
+- **Flow evidence:** llm_to_refund
+
+#### Priority Factors
+
+- +4 Target owns a restricted asset.
+- +3 Target is an executable tool.
+- +3 Target is in a privileged trust zone.
+- +1 Path crosses 1 trust boundary.
+- +4 Path contains high-severity flow findings.
+
+#### Trust Transitions
+
 - llm (external_ai) → refund_tool (privileged)
 
 ### AP-007
@@ -221,8 +186,17 @@ Manipulated model output can request a consequential tool operation without inde
 - **Entry point:** customer
 - **Target:** audit_storage
 - **Hop count:** 6
+- **Priority:** critical
+- **Priority score:** 13
 - **Route:** customer → web_app → backend_api → vector_db → llm → refund_tool → audit_storage
 - **Flow evidence:** customer_to_web, web_to_backend, backend_to_vector, vector_to_llm, llm_to_refund, refund_to_audit
+
+#### Priority Factors
+
+- +3 Target owns a confidential asset.
+- +3 Target is in a privileged trust zone.
+- +3 Path crosses 6 trust boundaries.
+- +4 Path contains high-severity flow findings.
 
 #### Trust Transitions
 
@@ -232,6 +206,94 @@ Manipulated model output can request a consequential tool operation without inde
 - vector_db (data) → llm (external_ai)
 - llm (external_ai) → refund_tool (privileged)
 - refund_tool (privileged) → audit_storage (data)
+
+### AP-002
+
+- **Entry point:** llm
+- **Target:** audit_storage
+- **Hop count:** 2
+- **Priority:** high
+- **Priority score:** 12
+- **Route:** llm → refund_tool → audit_storage
+- **Flow evidence:** llm_to_refund, refund_to_audit
+
+#### Priority Factors
+
+- +3 Target owns a confidential asset.
+- +3 Target is in a privileged trust zone.
+- +2 Path crosses 2 trust boundaries.
+- +4 Path contains high-severity flow findings.
+
+#### Trust Transitions
+
+- llm (external_ai) → refund_tool (privileged)
+- refund_tool (privileged) → audit_storage (data)
+
+### AP-004
+
+- **Entry point:** customer
+- **Target:** customer_db
+- **Hop count:** 3
+- **Priority:** high
+- **Priority score:** 10
+- **Route:** customer → web_app → backend_api → customer_db
+- **Flow evidence:** customer_to_web, web_to_backend, backend_to_customer_db
+
+#### Priority Factors
+
+- +4 Target owns a restricted asset.
+- +3 Target is in a privileged trust zone.
+- +3 Path crosses 3 trust boundaries.
+
+#### Trust Transitions
+
+- customer (internet) → web_app (edge)
+- web_app (edge) → backend_api (application)
+- backend_api (application) → customer_db (data)
+
+### AP-003
+
+- **Entry point:** customer
+- **Target:** audit_storage
+- **Hop count:** 3
+- **Priority:** high
+- **Priority score:** 9
+- **Route:** customer → web_app → backend_api → audit_storage
+- **Flow evidence:** customer_to_web, web_to_backend, backend_to_audit
+
+#### Priority Factors
+
+- +3 Target owns a confidential asset.
+- +3 Target is in a privileged trust zone.
+- +3 Path crosses 3 trust boundaries.
+
+#### Trust Transitions
+
+- customer (internet) → web_app (edge)
+- web_app (edge) → backend_api (application)
+- backend_api (application) → audit_storage (data)
+
+### AP-005
+
+- **Entry point:** customer
+- **Target:** vector_db
+- **Hop count:** 3
+- **Priority:** high
+- **Priority score:** 9
+- **Route:** customer → web_app → backend_api → vector_db
+- **Flow evidence:** customer_to_web, web_to_backend, backend_to_vector
+
+#### Priority Factors
+
+- +3 Target owns a confidential asset.
+- +3 Target is in a privileged trust zone.
+- +3 Path crosses 3 trust boundaries.
+
+#### Trust Transitions
+
+- customer (internet) → web_app (edge)
+- web_app (edge) → backend_api (application)
+- backend_api (application) → vector_db (data)
 
 ## Review Limitations
 
