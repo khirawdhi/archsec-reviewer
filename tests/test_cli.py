@@ -1,4 +1,5 @@
 import argparse
+import json
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,7 @@ from archsec_reviewer.cli import (
     _generate_structured_report,
     _is_yaml_file,
     _positive_integer,
+    main,
 )
 
 
@@ -126,6 +128,74 @@ data_flows:
     assert "AI-PROMPT-001:user_to_llm" in report
     assert "AI-TOOL-001:llm_to_refund" in report
     assert "user → llm → refund_tool" in report
+
+
+def test_generates_structured_json_report_from_cli(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    input_file = tmp_path / "architecture.yaml"
+    output_file = tmp_path / "reports" / "review.json"
+
+    input_file.write_text(
+        """
+name: JSON Export Test
+
+trust_zones:
+  - id: internet
+    name: Internet
+    trust_level: untrusted
+
+  - id: application
+    name: Application
+    trust_level: internal
+
+components:
+  - id: customer
+    name: Customer
+    type: user
+    trust_zone: internet
+
+  - id: api
+    name: API
+    type: api
+    trust_zone: application
+
+data_flows:
+  - id: customer-to-api
+    source: customer
+    destination: api
+    data:
+      - request
+    protocol: HTTPS
+    authenticated: true
+    encrypted: true
+""",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "archsec-review",
+            "--input",
+            str(input_file),
+            "--output",
+            str(output_file),
+            "--format",
+            "json",
+        ],
+    )
+
+    main()
+
+    document = json.loads(output_file.read_text(encoding="utf-8"))
+
+    assert document["schema_version"] == "1.0"
+    assert document["architecture"]["name"] == "JSON Export Test"
+    assert document["architecture"]["components"][1]["type"] == "api"
+    assert isinstance(document["findings"], list)
+    assert isinstance(document["attack_paths"], list)
 
 
 def test_detects_yaml_file_extensions() -> None:
