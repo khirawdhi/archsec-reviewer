@@ -10,7 +10,7 @@ from .parsers import (
     load_yaml_architecture,
 )
 from .report import render_markdown_report
-from .reporters import render_structured_review
+from .reporters import render_json_review, render_structured_review
 
 
 YAML_SUFFIXES = {".yaml", ".yml"}
@@ -41,7 +41,16 @@ def _build_parser() -> argparse.ArgumentParser:
         "--output",
         required=True,
         type=Path,
-        help="Output Markdown report.",
+        help="Output report path.",
+    )
+
+    parser.add_argument(
+        "-f",
+        "--format",
+        dest="output_format",
+        choices=("markdown", "json"),
+        default="markdown",
+        help="Structured report format. Default: markdown.",
     )
 
     parser.add_argument(
@@ -88,9 +97,9 @@ def _generate_structured_report(
     input_file: Path,
     output_file: Path,
     attack_path_cutoff: int,
+    output_format: str = "markdown",
 ) -> None:
     """Generate an architecture-aware report from YAML."""
-
     architecture = load_yaml_architecture(input_file)
 
     review = review_architecture(
@@ -98,9 +107,14 @@ def _generate_structured_report(
         attack_path_cutoff=attack_path_cutoff,
     )
 
+    if output_format == "json":
+        report = render_json_review(review)
+    else:
+        report = render_structured_review(review)
+
     _write_report(
         output_file,
-        render_structured_review(review),
+        report,
     )
 
 
@@ -142,12 +156,16 @@ def main() -> None:
     if not args.input.is_file():
         parser.error(f"Input file not found: {args.input}")
 
+    if args.output_format == "json" and not _is_yaml_file(args.input):
+        parser.error("JSON output requires a structured YAML input file.")
+
     try:
         if _is_yaml_file(args.input):
             _generate_structured_report(
                 input_file=args.input,
                 output_file=args.output,
                 attack_path_cutoff=args.attack_path_cutoff,
+                output_format=args.output_format,
             )
         else:
             _generate_report(
