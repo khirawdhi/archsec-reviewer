@@ -10,7 +10,11 @@ from .parsers import (
     load_yaml_architecture,
 )
 from .report import render_markdown_report
-from .reporters import render_json_review, render_structured_review
+from .reporters import (
+    render_json_review,
+    render_mermaid_review,
+    render_structured_review,
+)
 
 
 YAML_SUFFIXES = {".yaml", ".yml"}
@@ -48,7 +52,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "-f",
         "--format",
         dest="output_format",
-        choices=("markdown", "json"),
+        choices=("markdown", "json", "mermaid"),
         default="markdown",
         help="Structured report format. Default: markdown.",
     )
@@ -109,6 +113,8 @@ def _generate_structured_report(
 
     if output_format == "json":
         report = render_json_review(review)
+    elif output_format == "mermaid":
+        report = render_mermaid_review(review)
     else:
         report = render_structured_review(review)
 
@@ -156,8 +162,11 @@ def main() -> None:
     if not args.input.is_file():
         parser.error(f"Input file not found: {args.input}")
 
-    if args.output_format == "json" and not _is_yaml_file(args.input):
-        parser.error("JSON output requires a structured YAML input file.")
+    if args.output_format in {"json", "mermaid"} and not _is_yaml_file(args.input):
+        parser.error(
+            f"{args.output_format.capitalize()} output requires "
+            "a structured YAML input file."
+        )
 
     try:
         if _is_yaml_file(args.input):

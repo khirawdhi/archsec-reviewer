@@ -1,6 +1,6 @@
 # ArchSec Reviewer
 
-A security architecture analysis engine for cloud-native, distributed, and AI-enabled systems.
+A deterministic security architecture analysis engine for cloud-native, distributed, and AI-enabled systems.
 
 > Model trust transitions, discover attack paths, and generate evidence-backed security findings.
 
@@ -9,12 +9,13 @@ ArchSec Reviewer converts a structured architecture definition into a security r
 - Components, assets, trust zones, and data flows
 - Flow-specific security findings
 - Multi-hop attack paths
+- Transparent attack-path prioritization
 - Trust-boundary transitions
 - Finding severity and confidence
 - Supporting architecture evidence
 - Recommended security controls
 - Validation procedures
-- Markdown security reports
+- Markdown, JSON, and Mermaid outputs
 
 ## Why ArchSec Reviewer?
 
@@ -41,10 +42,12 @@ flowchart TD
     C --> D["Flow-aware rule engine"]
     C --> E["NetworkX attack-path engine"]
     D --> F["Evidence-backed findings"]
-    E --> G["Multi-hop attack paths"]
+    E --> G["Prioritized attack paths"]
     F --> H["Structured security review"]
     G --> H
     H --> I["Markdown report"]
+    H --> J["Versioned JSON"]
+    H --> K["Mermaid diagram"]
 ```
 
 ## Current Capabilities
@@ -53,8 +56,7 @@ flowchart TD
 
 ArchSec Reviewer models:
 
-- Components
-- Component types
+- Components and component types
 - Trust zones and trust levels
 - Assets and data classifications
 - Directed data flows
@@ -102,6 +104,19 @@ NetworkX is used to:
 - Preserve flow IDs as evidence
 - Record trust-zone transitions
 
+### Transparent Attack-Path Prioritization
+
+Discovered attack paths receive:
+
+- A priority level
+- A numerical priority score
+- Human-readable scoring factors
+- Sensitive-target consideration
+- Trust-boundary consideration
+- Related-finding severity consideration
+
+This makes the prioritization explainable rather than presenting an unexplained risk score.
+
 ### Safe YAML Processing
 
 Structured input uses:
@@ -114,6 +129,16 @@ Structured input uses:
 - Component-reference validation
 - Duplicate-ID detection
 - Rejection of unsafe Python object tags
+
+### Multiple Output Formats
+
+ArchSec Reviewer can generate:
+
+- Human-readable Markdown security reviews
+- Versioned JSON for integrations and automation
+- Mermaid architecture diagrams grouped by trust zone
+
+Mermaid output highlights high- and critical-priority attack paths, including entry points, intermediate components, sensitive targets, and supporting data flows.
 
 ## Installation
 
@@ -145,7 +170,7 @@ python -m pip install -e ".[dev]"
 
 ## Quick Start
 
-Generate a structured review:
+Generate a structured Markdown review:
 
 ```bash
 archsec-review \
@@ -153,13 +178,71 @@ archsec-review \
   --output reports/rag-security-review.md
 ```
 
-The YAML extension selects the structured analysis pipeline automatically.
+The YAML extension selects the structured analysis pipeline automatically. Markdown is the default output format.
 
 Preview the generated report:
 
 ```bash
 sed -n '1,120p' reports/rag-security-review.md
 ```
+
+## Output Formats
+
+### Markdown
+
+Generate a human-readable security review:
+
+```bash
+archsec-review \
+  --input examples/rag-system.yaml \
+  --output reports/rag-security-review.md \
+  --format markdown
+```
+
+### JSON
+
+Generate a versioned, machine-readable security review:
+
+```bash
+archsec-review \
+  --input examples/rag-system.yaml \
+  --output reports/rag-security-review.json \
+  --format json
+```
+
+JSON includes:
+
+- Schema version
+- Architecture inventory
+- Trust zones
+- Assets and data flows
+- Findings and evidence
+- Standards references
+- Prioritized attack paths
+- Trust transitions
+- Summary counts
+
+### Mermaid
+
+Generate a visual architecture diagram:
+
+```bash
+archsec-review \
+  --input examples/rag-system.yaml \
+  --output reports/rag-architecture.mmd \
+  --format mermaid
+```
+
+The Mermaid diagram includes:
+
+- Components grouped by trust zone
+- Directed data flows
+- Protocol labels
+- Unauthenticated and unencrypted flow indicators
+- High- and critical-priority attack paths
+- Distinct styling for entry points, intermediate nodes, and targets
+
+JSON and Mermaid output require structured YAML input.
 
 ## Example Architecture
 
@@ -278,7 +361,7 @@ archsec-review \
   --output reports/generated-rag-review.md
 ```
 
-Structured YAML is recommended for architecture-aware analysis.
+Structured YAML is recommended for architecture-aware analysis. JSON and Mermaid output are not available for legacy Markdown input.
 
 ## CLI Options
 
@@ -287,7 +370,12 @@ Structured YAML is recommended for architecture-aware analysis.
     Architecture input file.
 
 -o, --output
-    Output Markdown report.
+    Output report path.
+
+-f, --format
+    Structured output format:
+    markdown, json, or mermaid.
+    Default: markdown.
 
 -t, --title
     Report title for legacy Markdown or text input.
@@ -302,7 +390,8 @@ Example:
 ```bash
 archsec-review \
   --input examples/rag-system.yaml \
-  --output reports/rag-security-review.md \
+  --output reports/rag-security-review.json \
+  --format json \
   --attack-path-cutoff 5
 ```
 
@@ -322,21 +411,29 @@ archsec_reviewer/
 │   └── review.py
 ├── engines/
 │   ├── attack_paths.py
-│   └── flow_analysis.py
+│   ├── flow_analysis.py
+│   └── prioritization.py
 ├── parsers/
 │   └── yaml_parser.py
 └── reporters/
-    └── markdown.py
+    ├── json_report.py
+    ├── markdown.py
+    └── mermaid.py
 
 examples/
 ├── rag-system.md
 └── rag-system.yaml
 
-reports/
-├── generated-rag-review.md
-└── rag-security-review.md
-
 tests/
+├── test_application.py
+├── test_architecture_model.py
+├── test_attack_paths.py
+├── test_cli.py
+├── test_flow_analysis.py
+├── test_json_reporter.py
+├── test_mermaid_reporter.py
+├── test_prioritization.py
+└── test_yaml_parser.py
 ```
 
 ## Development
@@ -402,7 +499,8 @@ Current protections include:
 - Input-size limits
 - Schema-style field validation
 - Reference-integrity validation
-- Escaping of user-controlled report content
+- Escaping of user-controlled report and diagram content
+- Generated Mermaid-safe node identifiers
 - No shell or arbitrary code execution
 - Deterministic findings based on declared flows
 
@@ -413,8 +511,9 @@ Future LLM integration will remain separate from the deterministic analysis auth
 - Flow rules currently cover a focused set of AI and trust-boundary scenarios.
 - Attack paths show reachability, not proof of exploitability.
 - Severity is rule-defined and is not yet environment-adjusted.
-- Architecture diagrams are not yet generated automatically.
-- JSON and SARIF output are not yet supported.
+- Mermaid output produces diagram source rather than a rendered image.
+- SARIF output is not yet supported.
+- Comprehensive standards mappings are not yet implemented.
 - LLM-assisted architecture extraction is not yet implemented.
 - Markdown input uses the legacy keyword analyzer.
 
@@ -422,21 +521,19 @@ Future LLM integration will remain separate from the deterministic analysis auth
 
 ### Analysis
 
-- Risk and confidence scoring
-- Attack-path prioritization
 - Identity and authorization rules
 - Microservice and Kubernetes rules
 - CI/CD and software-supply-chain rules
 - Event-driven architecture rules
 - OWASP, MITRE ATT&CK, and MITRE ATLAS mappings
+- Environment-aware risk adjustment
 
 ### Output
 
-- JSON report export
-- Mermaid architecture diagrams
-- Mermaid attack-path diagrams
-- SARIF output
+- SARIF export
 - GitHub pull-request annotations
+- Rendered diagram artifacts
+- Finding filtering and report customization
 
 ### Guarded AI Assistance
 
@@ -448,12 +545,6 @@ Future LLM integration will remain separate from the deterministic analysis auth
 - Policy-gated tools
 - Human approval checkpoints
 
-## Design Principle
-
-> Security failures happen at trust boundaries, not components.
-
-ArchSec Reviewer focuses on how data, identity, privilege, and execution authority move through a system.
-
 ## License
 
-MIT
+This project is licensed under the MIT License.
