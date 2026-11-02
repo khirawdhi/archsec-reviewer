@@ -198,6 +198,72 @@ data_flows:
     assert isinstance(document["attack_paths"], list)
 
 
+def test_generates_mermaid_report_from_cli(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    input_file = tmp_path / "architecture.yaml"
+    output_file = tmp_path / "reports" / "architecture.mmd"
+
+    input_file.write_text(
+        """
+name: Mermaid Export Test
+
+trust_zones:
+  - id: internet
+    name: Internet
+    trust_level: untrusted
+
+  - id: application
+    name: Application
+    trust_level: internal
+
+components:
+  - id: customer
+    name: Customer
+    type: user
+    trust_zone: internet
+
+  - id: api
+    name: API
+    type: api
+    trust_zone: application
+
+data_flows:
+  - id: customer-to-api
+    source: customer
+    destination: api
+    protocol: HTTPS
+    authenticated: false
+    encrypted: false
+""",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "archsec-review",
+            "--input",
+            str(input_file),
+            "--output",
+            str(output_file),
+            "--format",
+            "mermaid",
+        ],
+    )
+
+    main()
+
+    diagram = output_file.read_text(encoding="utf-8")
+
+    assert diagram.startswith("flowchart TD\n")
+    assert 'subgraph zone_0["Internet — untrusted"]' in diagram
+    assert 'component_0["Customer (user)"]' in diagram
+    assert 'component_1["API (api)"]' in diagram
+    assert "unauthenticated · unencrypted" in diagram
+
+
 def test_detects_yaml_file_extensions() -> None:
     assert _is_yaml_file(Path("architecture.yaml"))
     assert _is_yaml_file(Path("architecture.yml"))
