@@ -264,6 +264,75 @@ data_flows:
     assert "unauthenticated · unencrypted" in diagram
 
 
+def test_generates_sarif_report_from_cli(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    input_file = tmp_path / "architecture.yaml"
+    output_file = tmp_path / "reports" / "review.sarif"
+
+    input_file.write_text(
+        """
+name: SARIF Export Test
+
+trust_zones:
+  - id: internet
+    name: Internet
+    trust_level: untrusted
+
+  - id: ai
+    name: AI Runtime
+    trust_level: internal
+
+components:
+  - id: customer
+    name: Customer
+    type: user
+    trust_zone: internet
+
+  - id: llm
+    name: Support LLM
+    type: llm
+    trust_zone: ai
+
+data_flows:
+  - id: customer-to-llm
+    source: customer
+    destination: llm
+    protocol: HTTPS
+    authenticated: true
+    encrypted: true
+""",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "archsec-review",
+            "--input",
+            str(input_file),
+            "--output",
+            str(output_file),
+            "--format",
+            "sarif",
+        ],
+    )
+
+    main()
+
+    document = json.loads(output_file.read_text(encoding="utf-8"))
+    run = document["runs"][0]
+
+    assert document["version"] == "2.1.0"
+    assert run["tool"]["driver"]["name"] == ("ArchSec Reviewer")
+    assert len(run["results"]) >= 1
+    assert (
+        run["results"][0]["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]
+        == input_file.as_posix()
+    )
+
+
 def test_detects_yaml_file_extensions() -> None:
     assert _is_yaml_file(Path("architecture.yaml"))
     assert _is_yaml_file(Path("architecture.yml"))
