@@ -15,7 +15,7 @@ ArchSec Reviewer converts a structured architecture definition into a security r
 - Supporting architecture evidence
 - Recommended security controls
 - Validation procedures
-- Markdown, JSON, and Mermaid outputs
+- Markdown, JSON, Mermaid, and SARIF outputs
 
 ## Why ArchSec Reviewer?
 
@@ -137,6 +137,7 @@ ArchSec Reviewer can generate:
 - Human-readable Markdown security reviews
 - Versioned JSON for integrations and automation
 - Mermaid architecture diagrams grouped by trust zone
+- SARIF 2.1.0 for code-scanning and security-tool integrations
 
 Mermaid output highlights high- and critical-priority attack paths, including entry points, intermediate components, sensitive targets, and supporting data flows.
 
@@ -243,6 +244,29 @@ The Mermaid diagram includes:
 - Distinct styling for entry points, intermediate nodes, and targets
 
 JSON and Mermaid output require structured YAML input.
+
+### SARIF
+
+Generate a SARIF 2.1.0 security-analysis report:
+
+```bash
+archsec-review \
+  --input examples/rag-system.yaml \
+  --output reports/rag-security-review.sarif \
+  --format sarif
+```
+
+SARIF output includes:
+
+- Stable security rule identifiers
+- Rule metadata and severity defaults
+- Finding-specific results
+- Architecture evidence and affected components
+- Recommended controls and validation steps
+- Standards references
+- The input YAML file as the alert location
+
+SARIF output can be consumed by compatible security tools and CI/CD integrations. GitHub code-scanning upload automation is not configured by this command itself.
 
 ## Example Architecture
 
@@ -374,7 +398,7 @@ Structured YAML is recommended for architecture-aware analysis. JSON and Mermaid
 
 -f, --format
     Structured output format:
-    markdown, json, or mermaid.
+    markdown, json, mermaid, or sarif
     Default: markdown.
 
 -t, --title
@@ -419,6 +443,7 @@ archsec_reviewer/
     ├── json_report.py
     ├── markdown.py
     └── mermaid.py
+    └── sarif.py
 
 examples/
 ├── rag-system.md
@@ -434,6 +459,8 @@ tests/
 ├── test_mermaid_reporter.py
 ├── test_prioritization.py
 └── test_yaml_parser.py
+└── test_sarif_reporter.py
+
 ```
 
 ## Development
@@ -512,7 +539,8 @@ Future LLM integration will remain separate from the deterministic analysis auth
 - Attack paths show reachability, not proof of exploitability.
 - Severity is rule-defined and is not yet environment-adjusted.
 - Mermaid output produces diagram source rather than a rendered image.
-- SARIF output is not yet supported.
+- SARIF findings currently point to line 1 of the input YAML file rather than the exact declaring YAML node.
+- Automatic upload to GitHub code scanning is not yet configured.
 - Comprehensive standards mappings are not yet implemented.
 - LLM-assisted architecture extraction is not yet implemented.
 - Markdown input uses the legacy keyword analyzer.
@@ -530,10 +558,9 @@ Future LLM integration will remain separate from the deterministic analysis auth
 
 ### Output
 
-- SARIF export
 - GitHub pull-request annotations
-- Rendered diagram artifacts
-- Finding filtering and report customization
+- GitHub code-scanning upload workflow
+- Exact YAML source locations for SARIF findings
 
 ### Guarded AI Assistance
 
